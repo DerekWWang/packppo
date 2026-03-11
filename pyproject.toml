@@ -1,0 +1,40 @@
+[project]
+name = "packppo"
+version = "0.1.0"
+description = "SC-MAPPO: Skill-Conditioned Multi-Agent PPO for quadruped coordination"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.3.0,<3.0.0",
+    "numpy>=1.26.0",
+    "gymnasium[mujoco]>=1.0.0",
+    "mujoco>=3.1.0",
+    "tyro>=0.8.0",
+    "tensorboard>=2.17.0",
+    "setuptools>=70.0.0,<80.0.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+packppo = "train:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["envs", "networks", "utils"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]

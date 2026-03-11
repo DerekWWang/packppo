@@ -1,0 +1,388 @@
+<!-- Multi-Go1 Scene: 3 Unitree Go1 quadrupeds + cooperative push box.
+     Based on MuJoCo Menagerie unitree_go1 morphology.
+     Each robot: 12 DOF (3 joints × 4 legs), freejoint base.
+     Leg order: FR, FL, RR, RL. Joint order: hip (roll), thigh (pitch), calf (pitch).
+     Robot 0 at y=0 (red), Robot 1 at y=0.8m (blue), Robot 2 at y=-0.8m (green).
+     Touch sensors: 4 per robot (one at each foot) = 12 total.
+     Push box: free body for coop_push task.
+     Physics: timestep=0.002, frame_skip=25 → control dt=0.05s. -->
+<mujoco model="multi_go1_3">
+  <compiler angle="radian" autolimits="true"/>
+  <option integrator="RK4" timestep="0.002"/>
+
+  <default>
+    <joint armature="0.01" damping="2" limited="true"/>
+    <geom contype="0" conaffinity="0" condim="1"
+          friction="0.6 0.3 0.3" rgba="0.4 0.4 0.4 1"/>
+    <motor ctrllimited="true" ctrlrange="-1 1"/>
+  </default>
+
+  <asset>
+    <texture name="texplane" type="2d" builtin="checker"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="512" height="512"/>
+    <material name="MatPlane" reflectance="0.5" texture="texplane"
+              texrepeat="1 1" texuniform="true"/>
+    <material name="r0_mat" rgba="0.7 0.2 0.2 1"/>
+    <material name="r1_mat" rgba="0.2 0.2 0.7 1"/>
+    <material name="r2_mat" rgba="0.2 0.7 0.2 1"/>
+    <material name="box_mat" rgba="0.9 0.9 0.2 1"/>
+  </asset>
+
+  <worldbody>
+    <light cutoff="100" diffuse="1 1 1" dir="0 0 -1.3" directional="true"
+           exponent="1" pos="0 0 4" specular="0.1 0.1 0.1"/>
+    <geom name="floor" type="plane" size="50 50 0.1" contype="1" conaffinity="1"
+          condim="3" material="MatPlane" friction="1.0 0.5 0.5"/>
+
+    <!-- ===================== ROBOT 0 (red, y=0) ===================== -->
+    <body name="trunk_r0" pos="0 0 0.4">
+      <joint name="root_r0" type="free"/>
+      <geom name="trunk_geom_r0" type="box" size="0.1335 0.097 0.057"
+            contype="1" conaffinity="1" condim="3" material="r0_mat"
+            mass="5.204"/>
+
+      <!-- FR: Front Right -->
+      <body name="FR_hip_r0" pos="0.1881 -0.04675 0">
+        <joint name="FR_hip_joint_r0" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="FR_hip_geom_r0" type="sphere" size="0.046"
+              rgba="0.6 0.2 0.2 1"/>
+        <body name="FR_thigh_r0" pos="0 -0.08 0">
+          <joint name="FR_thigh_joint_r0" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="FR_thigh_geom_r0" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.6 0.2 0.2 1"/>
+          <body name="FR_calf_r0" pos="0 0 -0.213">
+            <joint name="FR_calf_joint_r0" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="FR_calf_geom_r0" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.5 0.2 0.2 1"/>
+            <site name="FR_foot_r0" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- FL: Front Left -->
+      <body name="FL_hip_r0" pos="0.1881 0.04675 0">
+        <joint name="FL_hip_joint_r0" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="FL_hip_geom_r0" type="sphere" size="0.046"
+              rgba="0.6 0.2 0.2 1"/>
+        <body name="FL_thigh_r0" pos="0 0.08 0">
+          <joint name="FL_thigh_joint_r0" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="FL_thigh_geom_r0" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.6 0.2 0.2 1"/>
+          <body name="FL_calf_r0" pos="0 0 -0.213">
+            <joint name="FL_calf_joint_r0" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="FL_calf_geom_r0" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.5 0.2 0.2 1"/>
+            <site name="FL_foot_r0" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- RR: Rear Right -->
+      <body name="RR_hip_r0" pos="-0.1881 -0.04675 0">
+        <joint name="RR_hip_joint_r0" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="RR_hip_geom_r0" type="sphere" size="0.046"
+              rgba="0.6 0.2 0.2 1"/>
+        <body name="RR_thigh_r0" pos="0 -0.08 0">
+          <joint name="RR_thigh_joint_r0" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="RR_thigh_geom_r0" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.6 0.2 0.2 1"/>
+          <body name="RR_calf_r0" pos="0 0 -0.213">
+            <joint name="RR_calf_joint_r0" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="RR_calf_geom_r0" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.5 0.2 0.2 1"/>
+            <site name="RR_foot_r0" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- RL: Rear Left -->
+      <body name="RL_hip_r0" pos="-0.1881 0.04675 0">
+        <joint name="RL_hip_joint_r0" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="RL_hip_geom_r0" type="sphere" size="0.046"
+              rgba="0.6 0.2 0.2 1"/>
+        <body name="RL_thigh_r0" pos="0 0.08 0">
+          <joint name="RL_thigh_joint_r0" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="RL_thigh_geom_r0" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.6 0.2 0.2 1"/>
+          <body name="RL_calf_r0" pos="0 0 -0.213">
+            <joint name="RL_calf_joint_r0" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="RL_calf_geom_r0" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.5 0.2 0.2 1"/>
+            <site name="RL_foot_r0" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- ===================== ROBOT 1 (blue, y=0.8) ===================== -->
+    <body name="trunk_r1" pos="0 0.8 0.4">
+      <joint name="root_r1" type="free"/>
+      <geom name="trunk_geom_r1" type="box" size="0.1335 0.097 0.057"
+            contype="1" conaffinity="1" condim="3" material="r1_mat"
+            mass="5.204"/>
+
+      <!-- FR: Front Right -->
+      <body name="FR_hip_r1" pos="0.1881 -0.04675 0">
+        <joint name="FR_hip_joint_r1" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="FR_hip_geom_r1" type="sphere" size="0.046"
+              rgba="0.2 0.2 0.6 1"/>
+        <body name="FR_thigh_r1" pos="0 -0.08 0">
+          <joint name="FR_thigh_joint_r1" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="FR_thigh_geom_r1" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.2 0.6 1"/>
+          <body name="FR_calf_r1" pos="0 0 -0.213">
+            <joint name="FR_calf_joint_r1" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="FR_calf_geom_r1" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.2 0.5 1"/>
+            <site name="FR_foot_r1" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- FL: Front Left -->
+      <body name="FL_hip_r1" pos="0.1881 0.04675 0">
+        <joint name="FL_hip_joint_r1" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="FL_hip_geom_r1" type="sphere" size="0.046"
+              rgba="0.2 0.2 0.6 1"/>
+        <body name="FL_thigh_r1" pos="0 0.08 0">
+          <joint name="FL_thigh_joint_r1" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="FL_thigh_geom_r1" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.2 0.6 1"/>
+          <body name="FL_calf_r1" pos="0 0 -0.213">
+            <joint name="FL_calf_joint_r1" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="FL_calf_geom_r1" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.2 0.5 1"/>
+            <site name="FL_foot_r1" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- RR: Rear Right -->
+      <body name="RR_hip_r1" pos="-0.1881 -0.04675 0">
+        <joint name="RR_hip_joint_r1" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="RR_hip_geom_r1" type="sphere" size="0.046"
+              rgba="0.2 0.2 0.6 1"/>
+        <body name="RR_thigh_r1" pos="0 -0.08 0">
+          <joint name="RR_thigh_joint_r1" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="RR_thigh_geom_r1" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.2 0.6 1"/>
+          <body name="RR_calf_r1" pos="0 0 -0.213">
+            <joint name="RR_calf_joint_r1" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="RR_calf_geom_r1" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.2 0.5 1"/>
+            <site name="RR_foot_r1" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- RL: Rear Left -->
+      <body name="RL_hip_r1" pos="-0.1881 0.04675 0">
+        <joint name="RL_hip_joint_r1" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="RL_hip_geom_r1" type="sphere" size="0.046"
+              rgba="0.2 0.2 0.6 1"/>
+        <body name="RL_thigh_r1" pos="0 0.08 0">
+          <joint name="RL_thigh_joint_r1" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="RL_thigh_geom_r1" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.2 0.6 1"/>
+          <body name="RL_calf_r1" pos="0 0 -0.213">
+            <joint name="RL_calf_joint_r1" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="RL_calf_geom_r1" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.2 0.5 1"/>
+            <site name="RL_foot_r1" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- ===================== ROBOT 2 (green, y=-0.8) ===================== -->
+    <body name="trunk_r2" pos="0 -0.8 0.4">
+      <joint name="root_r2" type="free"/>
+      <geom name="trunk_geom_r2" type="box" size="0.1335 0.097 0.057"
+            contype="1" conaffinity="1" condim="3" material="r2_mat"
+            mass="5.204"/>
+
+      <!-- FR: Front Right -->
+      <body name="FR_hip_r2" pos="0.1881 -0.04675 0">
+        <joint name="FR_hip_joint_r2" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="FR_hip_geom_r2" type="sphere" size="0.046"
+              rgba="0.2 0.6 0.2 1"/>
+        <body name="FR_thigh_r2" pos="0 -0.08 0">
+          <joint name="FR_thigh_joint_r2" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="FR_thigh_geom_r2" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.6 0.2 1"/>
+          <body name="FR_calf_r2" pos="0 0 -0.213">
+            <joint name="FR_calf_joint_r2" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="FR_calf_geom_r2" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.5 0.2 1"/>
+            <site name="FR_foot_r2" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- FL: Front Left -->
+      <body name="FL_hip_r2" pos="0.1881 0.04675 0">
+        <joint name="FL_hip_joint_r2" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="FL_hip_geom_r2" type="sphere" size="0.046"
+              rgba="0.2 0.6 0.2 1"/>
+        <body name="FL_thigh_r2" pos="0 0.08 0">
+          <joint name="FL_thigh_joint_r2" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="FL_thigh_geom_r2" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.6 0.2 1"/>
+          <body name="FL_calf_r2" pos="0 0 -0.213">
+            <joint name="FL_calf_joint_r2" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="FL_calf_geom_r2" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.5 0.2 1"/>
+            <site name="FL_foot_r2" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- RR: Rear Right -->
+      <body name="RR_hip_r2" pos="-0.1881 -0.04675 0">
+        <joint name="RR_hip_joint_r2" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="RR_hip_geom_r2" type="sphere" size="0.046"
+              rgba="0.2 0.6 0.2 1"/>
+        <body name="RR_thigh_r2" pos="0 -0.08 0">
+          <joint name="RR_thigh_joint_r2" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="RR_thigh_geom_r2" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.6 0.2 1"/>
+          <body name="RR_calf_r2" pos="0 0 -0.213">
+            <joint name="RR_calf_joint_r2" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="RR_calf_geom_r2" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.5 0.2 1"/>
+            <site name="RR_foot_r2" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- RL: Rear Left -->
+      <body name="RL_hip_r2" pos="-0.1881 0.04675 0">
+        <joint name="RL_hip_joint_r2" axis="1 0 0" range="-0.863 0.863"/>
+        <geom name="RL_hip_geom_r2" type="sphere" size="0.046"
+              rgba="0.2 0.6 0.2 1"/>
+        <body name="RL_thigh_r2" pos="0 0.08 0">
+          <joint name="RL_thigh_joint_r2" axis="0 1 0" range="-0.686 4.501"/>
+          <geom name="RL_thigh_geom_r2" type="capsule"
+                fromto="0 0 0 0 0 -0.213" size="0.022"
+                rgba="0.2 0.6 0.2 1"/>
+          <body name="RL_calf_r2" pos="0 0 -0.213">
+            <joint name="RL_calf_joint_r2" axis="0 1 0" range="-2.818 -0.888"/>
+            <geom name="RL_calf_geom_r2" type="capsule"
+                  fromto="0 0 0 0 0 -0.213" size="0.016"
+                  contype="1" conaffinity="1" condim="3"
+                  rgba="0.2 0.5 0.2 1"/>
+            <site name="RL_foot_r2" pos="0 0 -0.213" size="0.022" type="sphere"/>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- ===================== PUSH BOX (coop_push task) ===================== -->
+    <body name="push_box" pos="3.0 0.0 0.15">
+      <joint name="box_joint" type="free"/>
+      <geom name="box_geom" type="box" size="0.3 0.3 0.15" mass="5.0"
+            material="box_mat" contype="1" conaffinity="1" condim="3"
+            friction="1.0 0.5 0.5"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- Robot 0: 12 torque motors (FR, FL, RR, RL × hip/thigh/calf) -->
+    <motor name="m_FR_hip_r0"   joint="FR_hip_joint_r0"   gear="33.5"/>
+    <motor name="m_FR_thigh_r0" joint="FR_thigh_joint_r0" gear="33.5"/>
+    <motor name="m_FR_calf_r0"  joint="FR_calf_joint_r0"  gear="33.5"/>
+    <motor name="m_FL_hip_r0"   joint="FL_hip_joint_r0"   gear="33.5"/>
+    <motor name="m_FL_thigh_r0" joint="FL_thigh_joint_r0" gear="33.5"/>
+    <motor name="m_FL_calf_r0"  joint="FL_calf_joint_r0"  gear="33.5"/>
+    <motor name="m_RR_hip_r0"   joint="RR_hip_joint_r0"   gear="33.5"/>
+    <motor name="m_RR_thigh_r0" joint="RR_thigh_joint_r0" gear="33.5"/>
+    <motor name="m_RR_calf_r0"  joint="RR_calf_joint_r0"  gear="33.5"/>
+    <motor name="m_RL_hip_r0"   joint="RL_hip_joint_r0"   gear="33.5"/>
+    <motor name="m_RL_thigh_r0" joint="RL_thigh_joint_r0" gear="33.5"/>
+    <motor name="m_RL_calf_r0"  joint="RL_calf_joint_r0"  gear="33.5"/>
+    <!-- Robot 1: 12 torque motors -->
+    <motor name="m_FR_hip_r1"   joint="FR_hip_joint_r1"   gear="33.5"/>
+    <motor name="m_FR_thigh_r1" joint="FR_thigh_joint_r1" gear="33.5"/>
+    <motor name="m_FR_calf_r1"  joint="FR_calf_joint_r1"  gear="33.5"/>
+    <motor name="m_FL_hip_r1"   joint="FL_hip_joint_r1"   gear="33.5"/>
+    <motor name="m_FL_thigh_r1" joint="FL_thigh_joint_r1" gear="33.5"/>
+    <motor name="m_FL_calf_r1"  joint="FL_calf_joint_r1"  gear="33.5"/>
+    <motor name="m_RR_hip_r1"   joint="RR_hip_joint_r1"   gear="33.5"/>
+    <motor name="m_RR_thigh_r1" joint="RR_thigh_joint_r1" gear="33.5"/>
+    <motor name="m_RR_calf_r1"  joint="RR_calf_joint_r1"  gear="33.5"/>
+    <motor name="m_RL_hip_r1"   joint="RL_hip_joint_r1"   gear="33.5"/>
+    <motor name="m_RL_thigh_r1" joint="RL_thigh_joint_r1" gear="33.5"/>
+    <motor name="m_RL_calf_r1"  joint="RL_calf_joint_r1"  gear="33.5"/>
+    <!-- Robot 2: 12 torque motors -->
+    <motor name="m_FR_hip_r2"   joint="FR_hip_joint_r2"   gear="33.5"/>
+    <motor name="m_FR_thigh_r2" joint="FR_thigh_joint_r2" gear="33.5"/>
+    <motor name="m_FR_calf_r2"  joint="FR_calf_joint_r2"  gear="33.5"/>
+    <motor name="m_FL_hip_r2"   joint="FL_hip_joint_r2"   gear="33.5"/>
+    <motor name="m_FL_thigh_r2" joint="FL_thigh_joint_r2" gear="33.5"/>
+    <motor name="m_FL_calf_r2"  joint="FL_calf_joint_r2"  gear="33.5"/>
+    <motor name="m_RR_hip_r2"   joint="RR_hip_joint_r2"   gear="33.5"/>
+    <motor name="m_RR_thigh_r2" joint="RR_thigh_joint_r2" gear="33.5"/>
+    <motor name="m_RR_calf_r2"  joint="RR_calf_joint_r2"  gear="33.5"/>
+    <motor name="m_RL_hip_r2"   joint="RL_hip_joint_r2"   gear="33.5"/>
+    <motor name="m_RL_thigh_r2" joint="RL_thigh_joint_r2" gear="33.5"/>
+    <motor name="m_RL_calf_r2"  joint="RL_calf_joint_r2"  gear="33.5"/>
+  </actuator>
+
+  <sensor>
+    <!-- Touch sensors at each foot (4 per robot = 12 total) -->
+    <touch name="touch_FR_r0" site="FR_foot_r0"/>
+    <touch name="touch_FL_r0" site="FL_foot_r0"/>
+    <touch name="touch_RR_r0" site="RR_foot_r0"/>
+    <touch name="touch_RL_r0" site="RL_foot_r0"/>
+    <touch name="touch_FR_r1" site="FR_foot_r1"/>
+    <touch name="touch_FL_r1" site="FL_foot_r1"/>
+    <touch name="touch_RR_r1" site="RR_foot_r1"/>
+    <touch name="touch_RL_r1" site="RL_foot_r1"/>
+    <touch name="touch_FR_r2" site="FR_foot_r2"/>
+    <touch name="touch_FL_r2" site="FL_foot_r2"/>
+    <touch name="touch_RR_r2" site="RR_foot_r2"/>
+    <touch name="touch_RL_r2" site="RL_foot_r2"/>
+  </sensor>
+
+  <!-- Default standing pose keyframe (hip=0, thigh=0.8, calf=-1.5 rad) -->
+  <keyframe>
+    <key name="standing"
+         qpos="0 0 0.4 1 0 0 0   0 0.8 -1.5  0 0.8 -1.5  0 1.0 -1.5  0 1.0 -1.5
+               0 0.8 0.4 1 0 0 0   0 0.8 -1.5  0 0.8 -1.5  0 1.0 -1.5  0 1.0 -1.5
+               0 -0.8 0.4 1 0 0 0   0 0.8 -1.5  0 0.8 -1.5  0 1.0 -1.5  0 1.0 -1.5
+               3.0 0.0 0.15 1 0 0 0"/>
+  </keyframe>
+</mujoco>
