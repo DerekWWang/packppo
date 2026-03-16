@@ -32,14 +32,19 @@ class VFormationEnv(MultiAntBase):
     def __init__(self, **kwargs: object) -> None:
         kwargs.setdefault("task_id", self.TASK_ID)
         super().__init__(**kwargs)
+        self._prev_goal_dist: float = float(np.linalg.norm(GOAL[:2]))
 
     def _compute_reward(self, actions: np.ndarray) -> tuple[float, dict]:
         positions = [self._robot_pos(i) for i in range(self.n_robots)]
         leader_pos = positions[0]
 
-        # Goal approach: negative distance from leader to goal (shaped)
+        # Goal approach: progress toward goal (delta reward).
+        # Replaces -0.1*goal_dist (≈ -1/step at start with goal 10 m away),
+        # which undercut the healthy_reward baseline and caused return-scale
+        # mismatch with task 0 at Phase 2 onset.
         goal_dist = float(np.linalg.norm(leader_pos[:2] - GOAL[:2]))
-        goal_reward = -0.1 * goal_dist
+        goal_reward = 0.1 * (self._prev_goal_dist - goal_dist)  # 0 at start, positive on approach
+        self._prev_goal_dist = goal_dist
 
         # Formation reward: flanking robots should be at prescribed offsets
         formation_err = 0.0
@@ -54,8 +59,15 @@ class VFormationEnv(MultiAntBase):
         reward = goal_reward + formation_reward - ctrl_cost
         info = {
             "goal_dist": goal_dist,
+            "goal_progress": goal_reward,
             "formation_err": formation_err,
             "formation_reward": formation_reward,
             "ctrl_cost": ctrl_cost,
         }
         return reward, info
+
+    def _reset_task_specific(self) -> None:
+        super()._reset_task_specific()
+        # Reset prev_goal_dist so first step gives zero progress reward.
+        # Must be done after mj_forward (called by parent reset) so xpos is fresh.
+        self._prev_goal_dist = float(np.linalg.norm(GOAL[:2]))

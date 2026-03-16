@@ -1,4 +1,2 @@
-from utils.popart import PopArtNormalizer
-from utils.curriculum import CurriculumSampler
-
-__all__ = ["PopArtNormalizer", "CurriculumSampler"]
+# Intentionally empty: import directly from submodules to avoid pulling
+# torch (via popart) into worker subprocesses at module-import time.

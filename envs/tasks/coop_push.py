@@ -3,10 +3,13 @@
 All robots jointly push a box from its spawn position to a target
 location 4 m ahead along the x-axis.
 
-Team reward = -box_dist_to_target + proximity_bonus - ctrl_cost
+Team reward = box_progress + proximity_bonus - ctrl_cost
 
-Robots that stay close to the box earn the proximity bonus, encouraging
-them to make contact and push cooperatively.
+box_progress is a *delta* reward: positive only when the box moves
+toward the target.  The old formulation used -box_dist (≈ -4 at
+episode start), which created large negative returns incompatible
+with other tasks' positive baselines and caused PopArt warm-start
+mismatch that destroyed locomotion at Phase 2 onset.
 """
 from __future__ import annotations
 
@@ -16,6 +19,7 @@ from envs.multi_ant_base import MultiAntBase
 
 BOX_SPAWN = np.array([2.0, 0.0, 0.15], dtype=np.float32)
 BOX_TARGET = np.array([6.0, 0.0, 0.15], dtype=np.float32)
+_INITIAL_BOX_DIST = float(np.linalg.norm(BOX_SPAWN[:2] - BOX_TARGET[:2]))  # 4.0 m
 
 
 class CoopPushEnv(MultiAntBase):
@@ -24,13 +28,15 @@ class CoopPushEnv(MultiAntBase):
     def __init__(self, **kwargs: object) -> None:
         kwargs.setdefault("task_id", self.TASK_ID)
         super().__init__(**kwargs)
+        self._prev_box_dist: float = _INITIAL_BOX_DIST
 
     def _compute_reward(self, actions: np.ndarray) -> tuple[float, dict]:
         box_pos = self._box_pos()
-
-        # Progress: negative distance from box to target (xy only)
         box_dist = float(np.linalg.norm(box_pos[:2] - BOX_TARGET[:2]))
-        push_reward = -box_dist
+
+        # Progress reward: positive only when the box moves toward the target.
+        push_reward = self._prev_box_dist - box_dist  # 0 at start, positive on progress
+        self._prev_box_dist = box_dist
 
         # Proximity bonus: encourage robots to stay near the box
         proximity = 0.0
@@ -44,6 +50,7 @@ class CoopPushEnv(MultiAntBase):
         reward = push_reward + 0.5 * proximity - ctrl_cost
         info = {
             "box_dist": box_dist,
+            "push_progress": push_reward,
             "proximity_bonus": proximity,
             "ctrl_cost": ctrl_cost,
         }
@@ -57,3 +64,4 @@ class CoopPushEnv(MultiAntBase):
         # Zero box velocity
         bvs = self._box_qvel_start
         self.data.qvel[bvs : bvs + 6] = 0.0
+        self._prev_box_dist = _INITIAL_BOX_DIST

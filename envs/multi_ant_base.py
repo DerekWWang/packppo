@@ -338,6 +338,10 @@ class MultiAntBase(gym.Env):
             return self._renderer.render()
         return None
 
+    def set_task_emb(self, emb: np.ndarray) -> None:
+        """Update the task embedding (called from the training loop via vec_env.call)."""
+        self._task_emb = np.asarray(emb, dtype=np.float32)
+
     def close(self) -> None:
         if self._renderer is not None:
             self._renderer.close()

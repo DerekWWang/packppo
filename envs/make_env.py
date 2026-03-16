@@ -39,6 +39,10 @@ def make_env(
     task_embedding_dim: int = 8,
     render_mode: str | None = None,
     include_cfrc_ext: bool = False,
+    ctrl_cost_weight: float = 0.01,
+    healthy_reward: float = 2.0,
+    frame_skip: int = 5,
+    reset_noise_scale: float = 0.02,
 ) -> Callable[[], MultiAntBase]:
     """Return a thunk (zero-arg callable) that creates and seeds an env.
 
@@ -54,6 +58,13 @@ def make_env(
             Disabled by default — foot contact booleans are sufficient for
             locomotion and cfrc_ext values can be orders of magnitude larger
             than other obs features, hurting early training.
+        frame_skip: Number of physics substeps per action (control frequency =
+            1 / (frame_skip * model_dt)).  Lower = more control steps per
+            simulated second = much easier to learn balance.  Default 5
+            (was 25 — too coarse for a 12-DOF quadruped to bootstrap from).
+        reset_noise_scale: Std of uniform noise added to qpos/qvel at reset.
+            Default 0.02 (was 0.1 — too large, starts robots in destabilised
+            joint configurations that cause immediate falls).
 
     Returns:
         A callable that returns a ready-to-use MultiAntBase instance.
@@ -70,6 +81,10 @@ def make_env(
             task_embedding_dim=task_embedding_dim,
             render_mode=render_mode,
             include_cfrc_ext=include_cfrc_ext,
+            ctrl_cost_weight=ctrl_cost_weight,
+            healthy_reward=healthy_reward,
+            frame_skip=frame_skip,
+            reset_noise_scale=reset_noise_scale,
         )
         env.reset(seed=seed)
         return env

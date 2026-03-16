@@ -59,8 +59,18 @@ class TaskConditionedAttention(nn.Module):
         self._init_weights()
 
     def _init_weights(self) -> None:
-        for layer in [self.W_q, self.W_k, self.W_v, self.out_proj]:
+        for layer in [self.W_q, self.W_k, self.W_v]:
             nn.init.orthogonal_(layer.weight, gain=1.0)
+        # Zero-init out_proj so that at Phase 2 onset attn_flat == 0, exactly
+        # matching the Phase 1 behaviour (where zeros were hardcoded).  The
+        # policy_head weight slice for attention dims was never trained in
+        # Phase 1 (always received 0 input → zero gradient), so injecting a
+        # non-zero attn_flat with random out_proj weights would cause a large
+        # policy distribution shift and crash episodic length.  Zero-init
+        # lets attention learn gradually from a stable baseline; gradients
+        # still flow because A@V is non-zero.
+        nn.init.zeros_(self.out_proj.weight)
+        nn.init.zeros_(self.out_proj.bias)
         # Initialise task modulations near zero so the network starts
         # approximately task-agnostic
         nn.init.zeros_(self.task_mod_q.weight)
